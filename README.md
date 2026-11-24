@@ -1,383 +1,249 @@
-# NETWORKED STUDENT MANAGEMENT SYSTEM
-## Complete Project Development Documentation
+# Networked Student Management System (NSMS)
 
-**Developer:** Sumit Dhaywar  
-**Project:** Networked Student Management System (NSMS)  
-**Programming Language:** Python  
-**Database:** MySQL  
-**Architecture:** Frontend → Gateway → Server → Database  
-**Repository:** https://github.com/sumitdhaywar/Networked-Student-Management-System
+### A Python & MySQL-Based Client-Server Academic Management Application
+
+**Developed by Sumit Dhaywar**
+
+[![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![Architecture](https://img.shields.io/badge/Architecture-Client--Server-success)](https://github.com/sumitdhaywar/Networked-Student-Management-System)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/sumitdhaywar/Networked-Student-Management-System)
 
 ---
 
-# 1. PROJECT INTRODUCTION
+## 📌 Project Overview
 
-The Networked Student Management System (NSMS) is a network-based academic management application developed using Python and MySQL.
+The **Networked Student Management System (NSMS)** is a network-based academic management application developed using Python and MySQL.
 
-The system is designed to centralize academic administration and manage student records, teacher information, courses, student allocations, marks, and examination results.
+It is designed to centralize academic administration by managing student records, teacher information, courses, allocations, marks, and examination results.
 
-Unlike a basic single-user management application, NSMS uses a multi-layer client-server architecture. The frontend communicates through a dedicated gateway, which forwards requests to the backend server. The backend processes application operations and interacts with the MySQL database through its application and data-access components.
+Unlike a basic single-user management application, NSMS follows a multi-layer client-server architecture in which the frontend communicates with a backend through a dedicated gateway.
 
-The project demonstrates practical implementation of:
-- Python programming
-- MySQL database management
-- Client-server architecture
-- Network communication
-- CRUD operations
-- Authentication
-- Database relationships
-- Backend application development
+The project demonstrates practical software development concepts, including database management, network communication, CRUD operations, application architecture, and backend development.
 
-# 2. TECHNOLOGY STACK
+## ✨ Key Features
 
-| Component | Technology |
+| Module | Functionality |
 |---|---|
-| Programming language | Python |
-| Frontend | Python |
-| Gateway | Python |
-| Backend server | Python |
-| Database | MySQL |
-| Database language | SQL |
-| Communication architecture | Client-server |
-| Version control | Git and GitHub |
+| Student Management | Add, search, list, update and delete student records |
+| Teacher Management | Maintain teacher information |
+| Course Management | Create and manage course records |
+| Allocation Management | Connect teachers, students and courses |
+| Marks Management | Enter and manage academic marks |
+| Result Management | Calculate results and identify toppers |
+| Authentication | Student login and account management |
+| Database Management | Centralized MySQL data storage |
 
-# 3. SYSTEM ARCHITECTURE
+*Feature descriptions are based on the project development documentation. Individual modules should be verified against the latest source code.*
 
-The confirmed high-level architecture is:
+## 🏗️ System Architecture
 
-Frontend → Gateway → Server → Database
+NSMS uses a layered client-server architecture.
 
-The backend implementation has also been discussed using service and repository components.
-
-## Architecture responsibilities
-
-### Frontend
-- Provides the user interface.
-- Accepts user inputs.
-- Displays results.
-- Provides access to management operations.
-
-### Gateway
-- Receives frontend requests.
-- Handles communication between frontend and backend.
-- Routes requests.
-- Performs request validation and sanitization.
-
-### Backend Server
-- Receives requests from the gateway.
-- Processes application operations.
-- Coordinates backend functionality.
-- Returns responses.
-
-### Services
-- Handle business logic.
-- Coordinate student, teacher, course and marks operations.
-- Apply application-level rules.
-
-### Repositories
-- Handle database operations.
-- Execute SQL queries.
-- Separate database access from business logic.
-
-### MySQL Database
-- Maintains centralized academic information.
-- Stores user accounts.
-- Maintains relationships between academic entities.
-
-# 4. DATABASE DESIGN
-
-The project uses MySQL.
-
-## Main entities
-
-1. Users
-2. Students
-3. Teachers
-4. Courses
-5. Teacher-student-course allocations
-6. Marks and academic results
-
-## Existing database records
-
-The following records were present during the November 2026 testing session.
-
-### Users
-- admin01
-- amit301
-- adi101
-
-### Students
-- 101
-- 103
-- 104
-- 105
-- 5040
-
-### Courses
-- 201
-
-### Teachers
-- 301
-- 302
-
-These are existing development records, not credentials or a complete database schema.
-
-## Teacher-student-course allocation
-
-The project development notes identify an allocation relationship named:
-
-`teacher_student_allocation`
-
-Important fields:
-- teacher_id
-- student_id
-- course_id
-
-The allocation structure uses composite primary-key and foreign-key constraints.
-
-The exact complete SQL schema should be taken from the actual MySQL database.
-
-# 5. APPLICATION MODULES
-
-## 5.1 Student Management
-
-- Add student.
-- Search student.
-- List students.
-- Update student.
-- Delete student.
-
-## 5.2 Teacher Management
-
-- Add teacher.
-- Maintain teacher records.
-- Update teacher information.
-- Display teacher information.
-- Support allocation-related operations.
-
-## 5.3 Course Management
-
-- Add courses.
-- Maintain course information.
-- Manage course records.
-
-## 5.4 Allocation Management
-
-- Connect teachers with students and courses.
-- Maintain allocation relationships.
-- Use database constraints to preserve relationships.
-
-## 5.5 Marks Management
-
-- Enter marks.
-- Associate marks with students.
-- Associate marks with courses.
-- Associate marks with teachers.
-- Validate marks.
-
-## 5.6 Result Management
-
-- Calculate student results.
-- Display results.
-- Identify toppers.
-
-## 5.7 Authentication
-
-The project includes student login functionality and centralized account management.
-
-Previous development discussions covered:
-- User records.
-- Password hashing.
-- Authentication.
-- Role-based permissions.
-- Account-to-student/teacher reference mapping.
-
-The earlier design preference was to keep separate login credentials limited to students rather than requiring separate teacher and administrator login accounts. The existing development database also contains admin01, amit301 and adi101; the exact current account-role configuration should be verified from the database.
-
-# 6. SECURITY AND DATA VALIDATION
-
-Previously discussed security improvements include:
-
-- Password hashing using PBKDF2.
-- Input validation.
-- Gateway request sanitization.
-- Database foreign-key constraints.
-- Composite primary keys.
-- Server-side permission checks.
-- Keeping database credentials separate from public source code.
-
-These should be verified against the current implementation before being described as completed security features.
-
-# 7. DEVELOPMENT ENVIRONMENT
-
-The project was developed and tested using Windows and PowerShell.
-
-Earlier development directory:
-
-`C:\Users\ADMIN\Desktop\networkedstudentmanagement`
-
-Later testing directory:
-
-`C:\Users\ADMIN\Desktop\networkedstudentmanagement_original`
-
-The latest successful application launch instructions used the second directory.
-
-## Starting the application
-
-Open the project directory:
-
-```powershell
-cd "C:\Users\ADMIN\Desktop\networkedstudentmanagement_original"
+```mermaid
+flowchart TD
+    A["Frontend<br/>User Interface"] --> B["Gateway<br/>Request Handling"]
+    B --> C["Backend Server<br/>Application Processing"]
+    C --> D["Service Layer<br/>Business Logic"]
+    D --> E["Repository Layer<br/>Database Operations"]
+    E --> F[("MySQL Database")]
+    F --> E
+    E --> D
+    D --> C
+    C --> B
+    B --> A
 ```
 
-### Terminal 1 – Backend Server
+### Architecture Components
 
-```powershell
+**1. Frontend**
+- Accepts user input.
+- Displays application information.
+- Provides access to management operations.
+
+**2. Gateway**
+- Receives frontend requests.
+- Routes communication to the backend.
+- Handles request processing and validation.
+
+**3. Backend Server**
+- Processes application requests.
+- Coordinates application functionality.
+- Returns responses to the gateway.
+
+**4. Service Layer**
+- Handles business logic.
+- Coordinates academic operations.
+
+**5. Repository Layer**
+- Handles database access.
+- Executes SQL operations.
+
+**6. MySQL Database**
+- Stores academic records.
+- Maintains relationships between entities.
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Application development |
+| MySQL | Relational database |
+| SQL | Database queries |
+| Git | Version control |
+| GitHub | Source code hosting |
+| PowerShell | Development environment |
+
+## 🗄️ Database Design
+
+The system is designed around the following main entities:
+
+- Users
+- Students
+- Teachers
+- Courses
+- Teacher-Student-Course Allocations
+- Marks and Academic Results
+
+### Allocation Relationship
+
+The project documentation identifies a relationship named `teacher_student_allocation`.
+
+Important fields:
+
+- `teacher_id`
+- `student_id`
+- `course_id`
+
+Composite primary-key and foreign-key constraints are part of the documented database design.
+
+*The complete ER diagram and SQL schema will be added after verification against the actual database.*
+
+## 🔐 Security Considerations
+
+Security-related development considerations include:
+
+- Password hashing.
+- Input validation.
+- Request sanitization.
+- Database relationship constraints.
+- Server-side permission checks.
+- Keeping database credentials outside public source code.
+
+The actual implementation of each security measure should be verified before considering it complete.
+
+## ⚙️ Installation and Execution
+
+### Prerequisites
+
+- Python 3
+- MySQL Server
+- Git
+- Required Python packages
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/sumitdhaywar/Networked-Student-Management-System.git
+```
+
+### 2. Open the Project Directory
+
+```bash
+cd Networked-Student-Management-System
+```
+
+### 3. Configure MySQL
+
+Configure your MySQL database using the project's actual database configuration and schema.
+
+Do not commit passwords or database credentials to GitHub.
+
+### 4. Start the Backend Server
+
+```bash
 python server.py
 ```
 
-### Terminal 2 – Gateway
+### 5. Start the Gateway
 
-```powershell
-cd "C:\Users\ADMIN\Desktop\networkedstudentmanagement_original"
-python frontend\gateway.py
+Open another terminal in the project directory:
+
+```bash
+python frontend/gateway.py
 ```
 
-### Access the application
+### 6. Access the Application
 
+Open your browser:
+
+```text
 http://127.0.0.1:8080
-
-If port 8080 is busy, the gateway can be started on another configured port:
-
-```powershell
-$env:NSMS_GATEWAY_PORT="8090"
-python frontend\gateway.py
 ```
 
-Then access:
+**Note:** These commands reflect the previously documented development setup. Verify the repository paths, dependencies and database configuration before using them on a fresh installation.
 
-http://127.0.0.1:8090
+## 🧪 Testing
 
-# 8. TESTING AND VERIFICATION HISTORY
+Previously recorded development testing results:
 
-The project was tested through application execution and previous testing workflows.
-
-Previously recorded testing notes mentioned:
-
-- 10 automated pytest tests passing.
-- 23 out of 23 live gateway checks passing.
-
-These are historical reported results and should be rerun against the current repository before being treated as final release results.
-
-## Manual testing examples
-
-Marks entry testing used:
-
-| Field | Test value |
+| Test Category | Historical Result |
 |---|---|
-| Student ID | 101 |
-| Course ID | 201 |
-| Teacher ID | 301 |
-| Marks | 0–100 |
+| Automated pytest tests | 10 reported passing |
+| Live gateway checks | 23/23 reported passing |
+| Backend execution | Reported successful |
+| Gateway execution | Reported successful |
+| Browser access | Reported successful |
 
-Other functionality to verify:
-- Login.
-- Student CRUD operations.
-- Teacher management.
-- Course management.
-- Allocation management.
-- Marks entry.
-- Result calculation.
-- Topper identification.
-- Gateway-server communication.
-- Database connectivity.
+These are historical development results, not a claim of a newly verified release. They should be rerun against the current repository before being treated as final test results.
 
-# 9. PROJECT DESIGN DECISIONS
+## 📷 Application Screenshots
 
-The following preferences were established during development:
+Screenshots of the actual running application will be added here.
 
-1. Python is used for the application frontend and backend.
-2. MySQL is the database.
-3. The system follows Frontend → Gateway → Server → Database architecture.
-4. Only students were intended to receive separate login credentials in the original design preference.
-5. Teacher and course management should be integrated without breaking existing functionality.
-6. Existing working code should be preserved when adding features.
-7. New code should have comments identifying additions where appropriate.
-8. The implementation should remain understandable and maintainable.
-9. Avoid unnecessary complexity and excessive abstraction.
-10. The project should be suitable for an academic demonstration and a GitHub portfolio.
+Planned demonstrations:
 
-# 10. GITHUB REPOSITORY
+- Application dashboard
+- Student management
+- Teacher management
+- Course management
+- Marks entry
+- Result processing
 
-Repository:
+## 🚀 Future Improvements
 
-https://github.com/sumitdhaywar/Networked-Student-Management-System
-
-Repository name:
-
-Networked-Student-Management-System
-
-Developer:
-
-Sumit Dhaywar
-
-The README documentation has been prepared to explain:
-- Project overview.
-- Objectives.
-- Architecture.
-- Technology stack.
-- Application modules.
-- Database design.
-- Installation.
-- Testing.
-- Security.
-- Future improvements.
-
-Recommended additional repository material:
-- Actual system architecture diagram.
-- MySQL ER diagram.
-- Application screenshots.
-- Database schema.
-- Requirements file.
-- Testing documentation.
-
-# 11. FUTURE DEVELOPMENT
-
-Potential improvements include:
-
-- Improved dashboard.
+- Improved application dashboard.
 - More comprehensive academic reports.
-- Performance analytics.
-- Better error handling.
-- More automated testing.
+- Enhanced performance analytics.
+- Additional automated testing.
+- Improved error handling.
 - Database optimization.
-- Improved documentation.
-- Additional administrative functionality.
+- Better user experience.
 
-# 12. PROJECT STATUS
+## 🎯 Learning Outcomes
 
-The project has reached a working application stage.
+This project provides practical experience in:
 
-The latest recorded local test confirmed that:
-- The backend server could be started.
-- The gateway could be started separately.
-- Chrome could access the application.
-- The application was running successfully.
+- Python application development.
+- MySQL database management.
+- Client-server architecture.
+- Network communication.
+- CRUD operations.
+- Relational database design.
+- Backend application development.
+- Software testing and debugging.
+- Git and GitHub workflows.
 
-The OpenCode build process previously stopped at 51%, but the application was subsequently reported to be working.
+## 👨‍💻 Developer
 
-The project has a GitHub repository and README preparation is underway.
+**Sumit Dhaywar**
 
-The next important steps are:
-1. Verify the actual repository structure.
-2. Verify the complete MySQL schema.
-3. Verify all modules against the running application.
-4. Confirm testing results.
-5. Add screenshots and architecture documentation.
-6. Ensure the GitHub repository contains no sensitive information.
+Artificial Intelligence & Machine Learning Diploma Student
+
+- GitHub: [@sumitdhaywar](https://github.com/sumitdhaywar)
 
 ---
 
-**END OF MASTER DEVELOPMENT RECORD**
+*Built as a practical software development project with a focus on database management, network communication and modular application architecture.*
 
-This document consolidates the available NSMS development history and should be treated as the central project reference. Exact implementation details should always be checked against the current source code and MySQL database.
+
