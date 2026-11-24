@@ -1,8 +1,7 @@
-from getpass import getpass
-from Client.request import send_request
-
-# ===== UPDATED: Existing Code - Date import for Teacher Management =====
 from datetime import date
+from getpass import getpass
+
+from Client.request import send_request
 
 
 def read_int(message):
@@ -21,14 +20,12 @@ def read_float(message):
         return None
 
 
-# ===== ADDED: Teacher Management Feature - START =====
 def read_date(message):
     try:
         return date.fromisoformat(input(message))
     except ValueError:
         print("Please enter a valid date (YYYY-MM-DD).")
         return None
-# ===== ADDED: Teacher Management Feature - END =====
 
 
 def show_response(response):
@@ -51,7 +48,6 @@ def login():
     return response
 
 
-# ===== UPDATED: Existing Code - Admin menu organized into submenus; all original options preserved =====
 def admin_student_menu():
     while True:
         print("\n====== STUDENT MANAGEMENT ======")
@@ -105,7 +101,6 @@ def admin_student_menu():
         show_response(response)
 
 
-# ===== ADDED: Teacher Management Feature - START =====
 def admin_teacher_menu():
     while True:
         print("\n====== TEACHER MANAGEMENT ======")
@@ -122,55 +117,65 @@ def admin_teacher_menu():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            t_id = read_int("Enter teacher ID: ")
-            t_name = input("Enter teacher name: ")
-            j_o_d = read_date("Enter joining date (YYYY-MM-DD): ")
+            teacher_id = read_int("Enter teacher ID: ")
+            teacher_name = input("Enter teacher name: ")
+            joining_date = read_date("Enter joining date (YYYY-MM-DD): ")
             salary = read_float("Enter salary: ")
-            if t_id is None or j_o_d is None or salary is None or not t_name.strip():
+            if (
+                teacher_id is None
+                or joining_date is None
+                or salary is None
+                or not teacher_name.strip()
+            ):
                 print("Please provide valid teacher details.")
                 continue
             response = send_request(
                 "Add_Teacher",
                 {
-                    "t_id": t_id,
-                    "t_name": t_name,
-                    "j_o_d": j_o_d.isoformat(),
+                    "t_id": teacher_id,
+                    "t_name": teacher_name,
+                    "j_o_d": joining_date.isoformat(),
                     "salary": salary,
                 },
             )
 
         elif choice == "2":
-            t_id = read_int("Enter teacher ID: ")
-            if t_id is None:
+            teacher_id = read_int("Enter teacher ID: ")
+            if teacher_id is None:
                 continue
-            response = send_request("Search_Teacher", {"t_id": t_id})
+            response = send_request("Search_Teacher", {"t_id": teacher_id})
 
         elif choice == "3":
             response = send_request("Display All Teachers")
 
         elif choice == "4":
-            t_id = read_int("Enter teacher ID: ")
-            t_name = input("Enter new name: ")
-            j_o_d = read_date("Enter new joining date (YYYY-MM-DD): ")
+            teacher_id = read_int("Enter teacher ID: ")
+            teacher_name = input("Enter new name: ")
+            joining_date = read_date("Enter new joining date (YYYY-MM-DD): ")
             salary = read_float("Enter new salary: ")
-            if t_id is None or j_o_d is None or salary is None or not t_name.strip():
+            if (
+                teacher_id is None
+                or joining_date is None
+                or salary is None
+                or not teacher_name.strip()
+            ):
                 print("Please provide valid teacher details.")
                 continue
             response = send_request(
                 "Update_Teacher",
                 {
-                    "t_id": t_id,
-                    "t_name": t_name,
-                    "j_o_d": j_o_d.isoformat(),
+                    "t_id": teacher_id,
+                    "t_name": teacher_name,
+                    "j_o_d": joining_date.isoformat(),
                     "salary": salary,
                 },
             )
 
         elif choice == "5":
-            t_id = read_int("Enter teacher ID: ")
-            if t_id is None:
+            teacher_id = read_int("Enter teacher ID: ")
+            if teacher_id is None:
                 continue
-            response = send_request("Delete_Teacher", {"t_id": t_id})
+            response = send_request("Delete_Teacher", {"t_id": teacher_id})
 
         elif choice == "6":
             teacher_id = read_int("Enter teacher ID: ")
@@ -213,10 +218,8 @@ def admin_teacher_menu():
             continue
 
         show_response(response)
-# ===== ADDED: Teacher Management Feature - END =====
 
 
-# ===== ADDED: Course Management Feature - START =====
 def admin_course_menu():
     while True:
         print("\n====== COURSE MANAGEMENT ======")
@@ -230,43 +233,43 @@ def admin_course_menu():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            co_id = read_int("Enter course ID: ")
-            co_name = input("Enter course name: ")
+            course_id = read_int("Enter course ID: ")
+            course_name = input("Enter course name: ")
             fees = read_float("Enter course fees: ")
-            if co_id is None or fees is None or not co_name.strip():
+            if course_id is None or fees is None or not course_name.strip():
                 print("Please provide valid course details.")
                 continue
             response = send_request(
                 "Add_Course",
-                {"co_id": co_id, "co_name": co_name, "fees": fees},
+                {"co_id": course_id, "co_name": course_name, "fees": fees},
             )
 
         elif choice == "2":
-            co_id = read_int("Enter course ID: ")
-            if co_id is None:
+            course_id = read_int("Enter course ID: ")
+            if course_id is None:
                 continue
-            response = send_request("Search_Course", {"co_id": co_id})
+            response = send_request("Search_Course", {"co_id": course_id})
 
         elif choice == "3":
             response = send_request("Display All Courses")
 
         elif choice == "4":
-            co_id = read_int("Enter course ID: ")
-            co_name = input("Enter new course name: ")
+            course_id = read_int("Enter course ID: ")
+            course_name = input("Enter new course name: ")
             fees = read_float("Enter new course fees: ")
-            if co_id is None or fees is None or not co_name.strip():
+            if course_id is None or fees is None or not course_name.strip():
                 print("Please provide valid course details.")
                 continue
             response = send_request(
                 "Update_Course",
-                {"co_id": co_id, "co_name": co_name, "fees": fees},
+                {"co_id": course_id, "co_name": course_name, "fees": fees},
             )
 
         elif choice == "5":
-            co_id = read_int("Enter course ID: ")
-            if co_id is None:
+            course_id = read_int("Enter course ID: ")
+            if course_id is None:
                 continue
-            response = send_request("Delete_Course", {"co_id": co_id})
+            response = send_request("Delete_Course", {"co_id": course_id})
 
         elif choice == "6":
             break
@@ -276,10 +279,8 @@ def admin_course_menu():
             continue
 
         show_response(response)
-# ===== ADDED: Course Management Feature - END =====
 
 
-# ===== UPDATED: Existing Code - Marks options moved to submenu; new list/edit/delete options added =====
 def admin_marks_menu():
     while True:
         print("\n====== MARKS MANAGEMENT ======")
@@ -293,32 +294,39 @@ def admin_marks_menu():
 
         if choice == "1":
             student_id = read_int("Enter student ID: ")
-            co_id = read_int("Enter course ID: ")
-            t_id = read_int("Enter teacher ID: ")
+            course_id = read_int("Enter course ID: ")
+            teacher_id = read_int("Enter teacher ID: ")
             marks = read_float("Enter marks: ")
-            if None in (student_id, co_id, t_id, marks):
+            if None in (student_id, course_id, teacher_id, marks):
                 continue
-            response = send_request("Add_Marks", {"id": student_id, "co_id": co_id, "t_id": t_id, "marks": marks})
+            response = send_request(
+                "Add_Marks",
+                {
+                    "id": student_id,
+                    "co_id": course_id,
+                    "t_id": teacher_id,
+                    "marks": marks,
+                },
+            )
 
-        # ===== ADDED: Advanced marks management options - START =====
         elif choice == "2":
             response = send_request("Display All Result")
 
         elif choice == "3":
             roll = read_int("Enter marks record roll: ")
             student_id = read_int("Enter student ID: ")
-            co_id = read_int("Enter course ID: ")
-            t_id = read_int("Enter teacher ID: ")
+            course_id = read_int("Enter course ID: ")
+            teacher_id = read_int("Enter teacher ID: ")
             marks = read_float("Enter marks: ")
-            if None in (roll, student_id, co_id, t_id, marks):
+            if None in (roll, student_id, course_id, teacher_id, marks):
                 continue
             response = send_request(
                 "Update_Marks",
                 {
                     "roll": roll,
                     "id": student_id,
-                    "co_id": co_id,
-                    "t_id": t_id,
+                    "co_id": course_id,
+                    "t_id": teacher_id,
                     "marks": marks,
                 },
             )
@@ -328,7 +336,6 @@ def admin_marks_menu():
             if roll is None:
                 continue
             response = send_request("Delete_Marks", {"roll": roll})
-        # ===== ADDED: Advanced marks management options - END =====
 
         elif choice == "5":
             break
@@ -340,7 +347,6 @@ def admin_marks_menu():
         show_response(response)
 
 
-# ===== UPDATED: Existing Code - Result options moved to submenu; class statistics added =====
 def admin_result_menu():
     while True:
         print("\n====== RESULT MANAGEMENT ======")
@@ -360,10 +366,8 @@ def admin_result_menu():
         elif choice == "2":
             response = send_request("display_topper")
 
-        # ===== ADDED: Result statistics option - START =====
         elif choice == "3":
             response = send_request("result_statistics")
-        # ===== ADDED: Result statistics option - END =====
 
         elif choice == "4":
             break
@@ -375,7 +379,6 @@ def admin_result_menu():
         show_response(response)
 
 
-# ===== ADDED: Student Login Management Feature - START =====
 def admin_login_menu():
     while True:
         print("\n====== STUDENT LOGIN MANAGEMENT ======")
@@ -404,10 +407,8 @@ def admin_login_menu():
             continue
 
         show_response(response)
-# ===== ADDED: Student Login Management Feature - END =====
 
 
-# ===== UPDATED: Existing Code - Admin menu now dispatches to submenus =====
 def admin_menu():
     while True:
         print("\n========== ADMIN MENU ==========")
@@ -442,7 +443,6 @@ def admin_menu():
             print("Invalid choice.")
 
 
-# ===== UPDATED: Existing Code - Teacher menu renumbered; allocated students option added =====
 def teacher_menu():
     while True:
         print("\n========== TEACHER MENU ==========")
@@ -461,19 +461,25 @@ def teacher_menu():
                 continue
             response = send_request("Search_Student", {"id": student_id})
 
-        # ===== ADDED: Teacher Allocated Students Feature - START =====
         elif choice == "2":
             response = send_request("View_My_Allocated_Students")
-        # ===== ADDED: Teacher Allocated Students Feature - END =====
 
         elif choice == "3":
             student_id = read_int("Enter student ID: ")
-            co_id = read_int("Enter course ID: ")
-            t_id = read_int("Enter teacher ID: ")
+            course_id = read_int("Enter course ID: ")
+            teacher_id = read_int("Enter teacher ID: ")
             marks = read_float("Enter marks: ")
-            if None in (student_id, co_id, t_id, marks):
+            if None in (student_id, course_id, teacher_id, marks):
                 continue
-            response = send_request("Add_Marks", {"id": student_id, "co_id": co_id, "t_id": t_id, "marks": marks})
+            response = send_request(
+                "Add_Marks",
+                {
+                    "id": student_id,
+                    "co_id": course_id,
+                    "t_id": teacher_id,
+                    "marks": marks,
+                },
+            )
 
         elif choice == "4":
             student_id = read_int("Enter student ID: ")

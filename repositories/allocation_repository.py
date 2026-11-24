@@ -1,7 +1,5 @@
 from database.connection import mycon
 
-# ===== ADDED: Teacher Allocated Students Feature - START =====
-
 
 def add_allocation(teacher_id, student_id, course_id):
     cur = mycon.cursor()
@@ -78,6 +76,3 @@ def delete_allocation(teacher_id, student_id, course_id):
     finally:
         cur.close()
     return deleted
-
-
-# ===== ADDED: Teacher Allocated Students Feature - END =====

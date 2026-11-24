@@ -36,7 +36,42 @@ Keep the two processes running side by side:
 2. `python frontend/gateway.py` (this frontend, port 8080)
 3. Open <http://127.0.0.1:8080>
 
-The gateway only uses the Python standard library, so there is nothing to install.
+The gateway only uses the Python standard library. Install the server and test
+dependencies with `python -m pip install -r requirements.txt`.
+
+## Database configuration
+
+Configure database connection values in environment variables rather than
+keeping a password in source:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `NSMS_DB_HOST` | `localhost` | MySQL host |
+| `NSMS_DB_PORT` | `3306` | MySQL port |
+| `NSMS_DB_USER` | `root` | MySQL user |
+| `NSMS_DB_PASSWORD` | empty | MySQL password |
+| `NSMS_DB_NAME` | `SCHOOL_NET` | Existing database name |
+
+PowerShell example (the password is entered securely and kept in the current
+terminal session):
+
+```powershell
+$env:NSMS_DB_HOST = "localhost"
+$env:NSMS_DB_PORT = "3306"
+$env:NSMS_DB_USER = "root"
+$securePassword = Read-Host "MySQL password" -AsSecureString
+$passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+try { $env:NSMS_DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer) }
+finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer) }
+$env:NSMS_DB_NAME = "SCHOOL_NET"
+python server.py
+```
+
+The server expects the tables in `database/schema.sql` to already exist. The
+schema script contains a fixed `USE SCHOOL_NET`; do not run the whole script
+when preparing a differently named test database. Select the disposable test
+database and review the table DDL before applying it. Never apply schema SQL to
+an existing database without a backup.
 
 ### Optional settings
 
@@ -63,9 +98,10 @@ python frontend/gateway.py
 | **Student** | Profile (own record), own result, course-by-course toppers |
 
 Extra safety in the gateway: student rows are returned to the browser without the
-`password_hash` column (`Search_Student` / `Display All Student`), and tuple rows
-are normalized into named objects (`Display All Result`, teacher, course and
-allocation rows included). The credential route returns no password data.
+`password_hash` column (`Search_Student` / `Display All Student`), and student
+and topper tuples are normalized there. The UI maps result, teacher, course,
+allocation, and enrollment tuples to display fields. The credential route
+returns no password data.
 
 ## Server-side additions (additive only)
 
@@ -86,8 +122,6 @@ After updating these files, **restart `server.py` and `gateway.py`** so the new
 routes and whitelist are loaded. The database schema and data are unchanged.
 The dashboard loads a topper for each course automatically; courses without
 marks remain visible with a "No marks recorded" message.
-
-<!-- ===== ADDED: Teacher, Course and Teacher Allocated Students features ===== -->
 
 ### Teacher, course and allocated-student additions
 
@@ -132,8 +166,7 @@ Deleting a student removes their marks, teacher allocations, course enrollments,
 and linked student login in one transaction before deleting the student record.
 The confirmation dialog lists these associated records.
 
-<!-- ===== UPDATED: Existing Code - Student Login Management uses the centralized users table ===== -->
-Student Login Management now creates or updates an account in the centralized
+Student Login Management creates or updates an account in the centralized
 `users` table with `role = 'student'` and `reference_id` equal to the student ID.
 It reuses the existing PBKDF2 `salt$hash` format, rejects usernames already used
 by another account, and updates the same account instead of creating duplicates

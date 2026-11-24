@@ -3,9 +3,6 @@ from repositories import teacher_repository
 from repositories import student_repository
 from repositories import courses_repository
 
-# ===== ADDED: Teacher Allocated Students Feature - START =====
-
-
 def _valid_id(value):
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
@@ -70,6 +67,3 @@ def delete_allocation_se(teacher_id, student_id, course_id):
         return {"success": True, "message": "allocation removed successfully"}
     except Exception:
         return {"success": False, "message": "could not remove allocation"}
-
-
-# ===== ADDED: Teacher Allocated Students Feature - END =====

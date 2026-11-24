@@ -1,3 +1,5 @@
+import math
+
 from repositories import result_repository as repo
 
 
@@ -8,7 +10,13 @@ def add_result_se(id, co_id, t_id, marks):
         return {"success": False, "message": "invalid course id"}
     if not isinstance(t_id, int) or isinstance(t_id, bool) or t_id <= 0:
         return {"success": False, "message": "invalid teacher id"}
-    if isinstance(marks, bool) or not isinstance(marks, (int, float)) or marks < 0 or marks > 100:
+    if (
+        isinstance(marks, bool)
+        or not isinstance(marks, (int, float))
+        or marks < 0
+        or marks > 100
+        or not math.isfinite(marks)
+    ):
         return {"success": False, "message": "invalid marks"}
     try:
         roll = repo.add_result(id, co_id, t_id, marks)
@@ -46,7 +54,13 @@ def update_result_se(roll, id, co_id, t_id, marks):
         return {"success": False, "message": "invalid course id"}
     if not isinstance(t_id, int) or isinstance(t_id, bool) or t_id <= 0:
         return {"success": False, "message": "invalid teacher id"}
-    if isinstance(marks, bool) or not isinstance(marks, (int, float)) or marks < 0 or marks > 100:
+    if (
+        isinstance(marks, bool)
+        or not isinstance(marks, (int, float))
+        or marks < 0
+        or marks > 100
+        or not math.isfinite(marks)
+    ):
         return {"success": False, "message": "invalid marks"}
     try:
         updated = repo.update_result(roll, id, co_id, t_id, marks)
@@ -75,10 +89,10 @@ def calculate_result_se(id):
 
     try:
         results = repo.get_student_marks(id)
-        if not results:
+        marks = [row[0] for row in results if row[0] is not None]
+        if not marks:
             return {"success": False, "message": "no marks found"}
 
-        marks = [row[0] for row in results]
         total = sum(marks)
         percentage = total / len(marks)
         status = "Pass" if all(mark >= 35 for mark in marks) else "Fail"
@@ -97,7 +111,7 @@ def calculate_result_se(id):
 def get_topper_se():
     try:
         topper = repo.get_topper()
-        if topper is None:
+        if topper is None or topper[2] is None or topper[3] is None:
             return {"success": False, "message": "topper not found"}
         return {"success": True, "data": topper}
     except Exception as e:
@@ -122,7 +136,12 @@ def get_course_toppers_se():
             })
             current_course_id = course_id
 
-        if student_id is not None and courses[-1]["topper"] is None:
+        if (
+            student_id is not None
+            and total is not None
+            and average is not None
+            and courses[-1]["topper"] is None
+        ):
             courses[-1]["topper"] = {
                 "id": student_id,
                 "name": student_name,
@@ -133,7 +152,6 @@ def get_course_toppers_se():
     return {"success": True, "data": courses}
 
 
-# Advanced analytics (added for the web frontend - non-destructive addition)
 def get_result_statistics_se():
     try:
         rows = repo.get_result_statistics_rows()
@@ -146,6 +164,8 @@ def get_result_statistics_se():
     students = []
     for row in rows:
         student_id, name, subjects, total, average, failed_subjects = row
+        if not subjects or total is None or average is None:
+            continue
         failed_subjects = int(failed_subjects or 0)
         students.append({
             "id": student_id,
@@ -156,6 +176,9 @@ def get_result_statistics_se():
             "failed_subjects": failed_subjects,
             "status": "Pass" if failed_subjects == 0 else "Fail"
         })
+
+    if not students:
+        return {"success": False, "message": "no results found"}
 
     class_average = round(
         sum(student["average"] for student in students) / len(students), 2

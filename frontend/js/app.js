@@ -28,7 +28,6 @@ const NAV = {
   admin: [
     { id: "dashboard", label: "Dashboard", icon: "grid" },
     { id: "students", label: "Students", icon: "users" },
-    // ===== ADDED: Teacher, Course and Student Login Management navigation =====
     { id: "teachers", label: "Teachers", icon: "award" },
     { id: "courses", label: "Courses", icon: "grid" },
     { id: "enrollments", label: "Enrollments", icon: "users" },
@@ -39,7 +38,6 @@ const NAV = {
   teacher: [
     { id: "dashboard", label: "Dashboard", icon: "grid" },
     { id: "students", label: "Student lookup", icon: "search" },
-    // ===== ADDED: Teacher Allocated Students Feature - navigation =====
     { id: "allocated", label: "My students", icon: "users" },
     { id: "marks", label: "Add marks", icon: "edit" },
     { id: "results", label: "Results", icon: "chart" },
@@ -54,7 +52,6 @@ const state = {
   user: api.getUser(),
   view: "",
   students: [],
-  // ===== ADDED: Teacher, Course and Allocated Student state =====
   teachers: [],
   courses: [],
   allocations: [],
@@ -157,7 +154,6 @@ function toResult(raw) {
   };
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 function toTeacher(raw) {
   if (!raw) return null;
   if (Array.isArray(raw)) {
@@ -175,9 +171,7 @@ function toTeacher(raw) {
     joining_date: raw.joining_date ?? raw.j_o_d,
   };
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 function toCourse(raw) {
   if (!raw) return null;
   if (Array.isArray(raw)) {
@@ -189,9 +183,7 @@ function toCourse(raw) {
     course_fees: raw.course_fees ?? raw.fees,
   };
 }
-// ===== ADDED: Course Management Feature - END =====
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 function toAllocation(raw) {
   if (!raw) return null;
   if (Array.isArray(raw)) {
@@ -213,7 +205,6 @@ function toAllocation(raw) {
     teacher_name: raw.teacher_name,
   };
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
 function toEnrollment(raw) {
   if (!raw) return null;
@@ -520,7 +511,6 @@ function recentStudentsTable() {
     </div>`;
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 function teachersTable() {
   if (!state.teachers.length) {
     return emptyState("No teachers yet", "Add your first teacher to get started.");
@@ -577,9 +567,7 @@ function teacherSearchCard() {
       </div>
     </div>`;
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 function coursesTable() {
   if (!state.courses.length) {
     return emptyState("No courses yet", "Add your first course to get started.");
@@ -634,9 +622,7 @@ function courseSearchCard() {
       </div>
     </div>`;
 }
-// ===== ADDED: Course Management Feature - END =====
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 function allocationsTable({ showTeacher = true, removable = false } = {}) {
   if (!state.allocations.length) {
     return emptyState(
@@ -679,7 +665,6 @@ function allocationsTable({ showTeacher = true, removable = false } = {}) {
       </table>
     </div>`;
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
 function viewMeta() {
   const role = state.user?.role;
@@ -703,22 +688,18 @@ function viewMeta() {
       ? { title: "My result", subtitle: "Calculate your total, percentage and pass / fail status" }
       : { title: "Results", subtitle: "Calculate results, review marks records and class statistics" };
   }
-  // ===== ADDED: Teacher Management Feature - page metadata =====
   if (view === "teachers") {
     return { title: "Teachers", subtitle: "Create, search, update and delete teachers; allocate students" };
   }
-  // ===== ADDED: Course Management Feature - page metadata =====
   if (view === "courses") {
     return { title: "Courses", subtitle: "Create, search, update and delete courses" };
   }
   if (view === "enrollments") {
     return { title: "Course enrollments", subtitle: "Enroll students and manage course rosters" };
   }
-  // ===== ADDED: Teacher Allocated Students Feature - page metadata =====
   if (view === "allocated") {
     return { title: "My students", subtitle: "Students allocated to your teacher account" };
   }
-  // ===== ADDED: Student Login Management Feature - page metadata =====
   if (view === "logins") {
     return { title: "Student logins", subtitle: "Create or reset student credentials" };
   }
@@ -790,7 +771,6 @@ function teacherDashboard() {
       <div class="hero-actions">
         <button class="btn primary" data-nav="marks">${icon("edit")} Add marks</button>
         <button class="btn outline" data-nav="students">${icon("search")} Find student</button>
-        <!-- ===== ADDED: Teacher Allocated Students Feature - shortcut ===== -->
         <button class="btn outline" data-nav="allocated">${icon("users")} My students</button>
       </div>
     </section>
@@ -998,7 +978,6 @@ function resultsView() {
     </div>${staffExtras}`;
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 function teachersView() {
   return `
     <section class="card">
@@ -1047,9 +1026,7 @@ function teachersView() {
       ${allocationsTable({ showTeacher: true, removable: true })}
     </section>`;
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 function coursesView() {
   return `
     <section class="card">
@@ -1071,7 +1048,6 @@ function coursesView() {
       ${coursesTable()}
     </section>`;
 }
-// ===== ADDED: Course Management Feature - END =====
 
 function enrollmentOptions(items, idKey, nameKey) {
   if (!items.length) return "";
@@ -1177,7 +1153,6 @@ function enrollmentsView() {
     </section>`;
 }
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 function allocatedView() {
   return `
     <section class="card">
@@ -1188,9 +1163,7 @@ function allocatedView() {
       ${allocationsTable({ showTeacher: false, removable: false })}
     </section>`;
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
-// ===== ADDED: Student Login Management Feature - START =====
 function loginsView() {
   return `
     <section class="card narrow">
@@ -1214,7 +1187,6 @@ function loginsView() {
           <button class="btn primary" type="submit">${icon("key")} Save credentials</button>
         </div>
       </form>
-      <!-- ===== UPDATED: Existing Code - Student credentials are stored in the users table ===== -->
       <ul class="tips">
         <li>Credentials are stored in the centralized users table with the student role.</li>
         <li>Passwords are hashed before they are stored; they are never shown again.</li>
@@ -1222,7 +1194,6 @@ function loginsView() {
       </ul>
     </section>`;
 }
-// ===== ADDED: Student Login Management Feature - END =====
 
 function renderView() {
   switch (state.view) {
@@ -1232,7 +1203,6 @@ function renderView() {
       return studentDashboard();
     case "students":
       return studentsView();
-    // ===== ADDED: Teacher, Course, Allocated and Login views =====
     case "teachers":
       return teachersView();
     case "courses":
@@ -1370,7 +1340,6 @@ function enterView(view) {
   state.view = view;
   state.sidebarOpen = false;
   state.searchResult = view === "students" ? state.searchResult : null;
-  // ===== ADDED: Keep teacher and course search results scoped to their views =====
   state.teacherSearch = view === "teachers" ? state.teacherSearch : null;
   state.courseSearch = view === "courses" ? state.courseSearch : null;
 
@@ -1394,7 +1363,6 @@ function enterView(view) {
     loadCourseToppers({ silent: true });
   }
 
-  // ===== ADDED: Teacher, Course and Allocation view loading =====
   if (view === "teachers") {
     if (!state.teachers.length) loadTeachers({ silent: true });
     loadAllocations({ silent: true });
@@ -1442,7 +1410,6 @@ async function handleLogin(form) {
     state.user = api.getUser();
     state.view = firstView();
     state.students = [];
-    // ===== ADDED: Reset teacher, course and allocation state on login =====
     state.teachers = [];
     state.courses = [];
     state.allocations = [];
@@ -1478,11 +1445,10 @@ async function handleLogin(form) {
 }
 
 async function handleLogout() {
-  await api.logout();
+  const logoutResult = await api.logout();
   state.user = null;
   state.view = "";
   state.students = [];
-  // ===== ADDED: Reset teacher, course and allocation state on logout =====
   state.teachers = [];
   state.courses = [];
   state.allocations = [];
@@ -1502,7 +1468,12 @@ async function handleLogout() {
   state.sidebarOpen = false;
   renderLogin();
   syncHealth();
-  showToast("You have been logged out.", "info");
+  showToast(
+    logoutResult.success
+      ? "You have been logged out."
+      : logoutResult.message || "Local session cleared, but server logout failed.",
+    logoutResult.success ? "info" : "warning"
+  );
 }
 
 async function loadStudents({ silent = false } = {}) {
@@ -1519,7 +1490,6 @@ async function loadStudents({ silent = false } = {}) {
   }
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 async function loadTeachers({ silent = false } = {}) {
   try {
     const payload = await api.command("Display All Teachers");
@@ -1533,9 +1503,7 @@ async function loadTeachers({ silent = false } = {}) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 async function loadCourses({ silent = false } = {}) {
   try {
     const payload = await api.command("Display All Courses");
@@ -1557,7 +1525,6 @@ async function loadCourses({ silent = false } = {}) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Course Management Feature - END =====
 
 async function loadEnrollments({ silent = false } = {}) {
   try {
@@ -1573,7 +1540,6 @@ async function loadEnrollments({ silent = false } = {}) {
   }
 }
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 async function loadAllocations({ silent = false } = {}) {
   try {
     const payload = await api.command("Display All Allocations");
@@ -1603,7 +1569,6 @@ async function loadMyAllocations({ silent = false } = {}) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
 async function loadCourseToppers({ silent = false } = {}) {
   if (state.courseToppersLoading) return;
@@ -1701,7 +1666,6 @@ async function handleSearch(form) {
   }
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 async function handleTeacherSearch(form) {
   const t_id = Number(field(form, "t_id").value);
   if (!Number.isFinite(t_id) || t_id < 1) {
@@ -1726,9 +1690,7 @@ async function handleTeacherSearch(form) {
     setFormBusy(form, false);
   }
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 async function handleCourseSearch(form) {
   const co_id = Number(field(form, "co_id").value);
   if (!Number.isFinite(co_id) || co_id < 1) {
@@ -1753,9 +1715,7 @@ async function handleCourseSearch(form) {
     setFormBusy(form, false);
   }
 }
-// ===== ADDED: Course Management Feature - END =====
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 async function handleAllocate(form) {
   const payload = {
     teacher_id: Number(field(form, "teacher_id").value),
@@ -1791,9 +1751,7 @@ async function handleAllocate(form) {
     setFormBusy(form, false);
   }
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
-// ===== ADDED: Student Login Management Feature - START =====
 async function handleSetCredentials(form) {
   const payload = {
     id: Number(field(form, "id").value),
@@ -1826,7 +1784,6 @@ async function handleSetCredentials(form) {
     setFormBusy(form, false);
   }
 }
-// ===== ADDED: Student Login Management Feature - END =====
 
 async function handleAddMarks(form) {
   const payload = {
@@ -1943,7 +1900,6 @@ async function deleteResult(roll) {
   }
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 async function deleteTeacher(id) {
   const teacher = state.teachers.find(
     (item) => String(item.teacher_id) === String(id)
@@ -1966,9 +1922,7 @@ async function deleteTeacher(id) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 async function deleteCourse(id) {
   const course = state.courses.find(
     (item) => String(item.course_id) === String(id)
@@ -1991,9 +1945,7 @@ async function deleteCourse(id) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Course Management Feature - END =====
 
-// ===== ADDED: Teacher Allocated Students Feature - START =====
 async function removeAllocation(teacherId, studentId, courseId) {
   if (
     !window.confirm(
@@ -2019,7 +1971,6 @@ async function removeAllocation(teacherId, studentId, courseId) {
     showToast(error.message, "error");
   }
 }
-// ===== ADDED: Teacher Allocated Students Feature - END =====
 
 async function handleEnrollStudent(form) {
   const studentId = Number(field(form, "student_id").value);
@@ -2271,7 +2222,6 @@ function openStudentModal(student) {
   });
 }
 
-// ===== ADDED: Teacher Management Feature - START =====
 function openTeacherModal(teacher) {
   if (modalOpen) return;
   modalOpen = true;
@@ -2377,9 +2327,7 @@ function openTeacherModal(teacher) {
     }
   });
 }
-// ===== ADDED: Teacher Management Feature - END =====
 
-// ===== ADDED: Course Management Feature - START =====
 function openCourseModal(course) {
   if (modalOpen) return;
   modalOpen = true;
@@ -2475,7 +2423,6 @@ function openCourseModal(course) {
     }
   });
 }
-// ===== ADDED: Course Management Feature - END =====
 
 function onAppClick(event) {
   const navTarget = event.target.closest("[data-nav]");
@@ -2541,7 +2488,6 @@ function onAppClick(event) {
     case "refresh-profile":
       loadProfile();
       break;
-    // ===== ADDED: Teacher Management Feature - actions =====
     case "add-teacher":
       openTeacherModal();
       break;
@@ -2563,7 +2509,6 @@ function onAppClick(event) {
       state.teacherSearch = null;
       renderApp();
       break;
-    // ===== ADDED: Course Management Feature - actions =====
     case "add-course":
       openCourseModal();
       break;
@@ -2588,7 +2533,6 @@ function onAppClick(event) {
       state.courseSearch = null;
       renderApp();
       break;
-    // ===== ADDED: Teacher Allocated Students Feature - actions =====
     case "refresh-allocations":
       loadAllocations();
       break;
@@ -2634,7 +2578,6 @@ function onAppSubmit(event) {
     case "calculate-result":
       handleCalculate(form);
       break;
-    // ===== ADDED: Teacher, Course, Allocation and Login forms =====
     case "search-teacher":
       handleTeacherSearch(form);
       break;
@@ -2666,7 +2609,6 @@ function boot() {
     state.profile = null;
     state.result = null;
     state.searchResult = null;
-    // ===== ADDED: Reset teacher, course and allocation state on session expiry =====
     state.teachers = [];
     state.courses = [];
     state.allocations = [];

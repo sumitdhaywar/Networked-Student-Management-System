@@ -1,6 +1,5 @@
 from services import student_services as services
 
-# ===== ADDED: Student Credential Management via users table - imports =====
 from services import auth_services as auth_services
 from repositories import auth_repository as auth_repository
 from database.connection import mycon
@@ -52,7 +51,6 @@ def test_student_crud():
     print("all student operation passed")
 
 
-# ===== ADDED: Student Credential Management via users table - test =====
 def test_student_login_users_table():
     student_id = random.randint(10000000, 99999999)
     other_student_id = random.randint(10000000, 99999999)
@@ -136,7 +134,6 @@ def test_student_login_users_table():
         )
         mycon.commit()
         cur.close()
-# ===== ADDED: Student Credential Management via users table - test END =====
 
 
 def test_student_login():

@@ -3,7 +3,10 @@ from database.connection import mycon
 
 def get_user_by_username(username):
     cur = mycon.cursor(dictionary=True)
-    query = "SELECT user_id, username, password_hash, role, reference_id FROM users WHERE username = %s"
+    query = (
+        "SELECT user_id, username, password_hash, role, reference_id "
+        "FROM users WHERE username = %s"
+    )
     cur.execute(query, (username,))
     user = cur.fetchone()
     cur.close()
@@ -12,7 +15,10 @@ def get_user_by_username(username):
 
 def create_user(username, password_hash, role, reference_id=None):
     cur = mycon.cursor()
-    query = "INSERT INTO users (username, password_hash, role, reference_id) VALUES (%s, %s, %s, %s)"
+    query = (
+        "INSERT INTO users (username, password_hash, role, reference_id) "
+        "VALUES (%s, %s, %s, %s)"
+    )
     cur.execute(query, (username, password_hash, role, reference_id))
     mycon.commit()
     user_id = cur.lastrowid
@@ -28,9 +34,6 @@ def update_user_password(user_id, password_hash):
     updated = cur.rowcount
     cur.close()
     return updated
-
-
-# ===== ADDED: Student Credential Management via users table - START =====
 
 
 def get_student_user(student_id):
@@ -58,6 +61,3 @@ def update_user_credentials(user_id, username, password_hash):
     finally:
         cur.close()
     return updated
-
-
-# ===== ADDED: Student Credential Management via users table - END =====

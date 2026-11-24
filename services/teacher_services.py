@@ -1,15 +1,23 @@
+import math
 from datetime import date
+
 from repositories import teacher_repository as repo
 
 
 def add_teacher_se(t_id, t_name, j_o_d, sal):
     if not isinstance(t_id, int) or isinstance(t_id, bool) or t_id <= 0:
         return {"success": False, "message": "invalid teacher id"}
-    if not isinstance(t_name, str) or not t_name.strip():
+    if not isinstance(t_name, str) or not t_name.strip() or len(t_name.strip()) > 30:
         return {"success": False, "message": "teacher name is not valid"}
     if not isinstance(j_o_d, date):
         return {"success": False, "message": "invalid joining date"}
-    if isinstance(sal, bool) or not isinstance(sal, (int, float)) or sal < 0:
+    if (
+        isinstance(sal, bool)
+        or not isinstance(sal, (int, float))
+        or sal < 0
+        or sal > 99999999.99
+        or not math.isfinite(sal)
+    ):
         return {"success": False, "message": "invalid salary"}
     try:
         repo.add_teacher(t_id, t_name.strip(), j_o_d, sal)
@@ -41,11 +49,17 @@ def get_all_teacher_se():
 def update_teacher_se(t_id, t_name, j_o_d, sal):
     if not isinstance(t_id, int) or isinstance(t_id, bool) or t_id <= 0:
         return {"success": False, "message": "invalid teacher id"}
-    if not isinstance(t_name, str) or not t_name.strip():
+    if not isinstance(t_name, str) or not t_name.strip() or len(t_name.strip()) > 30:
         return {"success": False, "message": "teacher name is not valid"}
     if not isinstance(j_o_d, date):
         return {"success": False, "message": "invalid joining date"}
-    if isinstance(sal, bool) or not isinstance(sal, (int, float)) or sal < 0:
+    if (
+        isinstance(sal, bool)
+        or not isinstance(sal, (int, float))
+        or sal < 0
+        or sal > 99999999.99
+        or not math.isfinite(sal)
+    ):
         return {"success": False, "message": "invalid salary"}
     try:
         updated = repo.update_teacher(t_id, t_name.strip(), j_o_d, sal)

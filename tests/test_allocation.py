@@ -7,9 +7,6 @@ from services import teacher_services as teacher_ser
 from services import student_services as student_ser
 from services import course_services as course_ser
 
-# ===== ADDED: Teacher Allocated Students Feature - tests =====
-
-
 def test_allocation():
     teacher_id = random.randint(100000, 900000)
     student_id = random.randint(100000, 900000)
@@ -61,6 +58,3 @@ def test_allocation():
         teacher_ser.delete_teacher_se(teacher_id)
 
     print("all allocation operations passed")
-
-
-# ===== ADDED: Teacher Allocated Students Feature - tests END =====

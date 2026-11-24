@@ -31,7 +31,10 @@ def get_all_results():
 
 def update_result(roll, id, co_id, t_id, marks):
     cur = mycon.cursor()
-    query = "UPDATE s_data SET id = %s, course_id = %s, teacher_id = %s, marks = %s WHERE roll = %s"
+    query = (
+        "UPDATE s_data SET id = %s, course_id = %s, teacher_id = %s, marks = %s "
+        "WHERE roll = %s"
+    )
     cur.execute(query, (id, co_id, t_id, marks, roll))
     updated = cur.rowcount
     mycon.commit()
@@ -51,7 +54,7 @@ def delete_result(roll):
 
 def get_student_marks(id):
     cur = mycon.cursor()
-    query = "SELECT marks FROM s_data WHERE id = %s"
+    query = "SELECT marks FROM s_data WHERE id = %s AND marks IS NOT NULL"
     cur.execute(query, (id,))
     results = cur.fetchall()
     cur.close()
@@ -62,7 +65,7 @@ def get_topper():
     cur = mycon.cursor()
     query = """SELECT s.id, s.name, SUM(d.marks), AVG(d.marks)
                FROM student s
-               JOIN s_data d ON s.id = d.id
+               JOIN s_data d ON s.id = d.id AND d.marks IS NOT NULL
                GROUP BY s.id, s.name
                ORDER BY AVG(d.marks) DESC
                LIMIT 1"""
@@ -77,7 +80,8 @@ def get_course_topper_rows():
     query = """SELECT c.course_id, c.course_name, s.id, s.name,
                       SUM(d.marks), AVG(d.marks)
                FROM course c
-               LEFT JOIN s_data d ON d.course_id = c.course_id
+               LEFT JOIN s_data d
+                 ON d.course_id = c.course_id AND d.marks IS NOT NULL
                LEFT JOIN student s ON s.id = d.id
                GROUP BY c.course_id, c.course_name, s.id, s.name
                ORDER BY c.course_id, AVG(d.marks) DESC, s.id"""
@@ -87,13 +91,12 @@ def get_course_topper_rows():
     return rows
 
 
-# Advanced analytics (added for the web frontend - non-destructive addition)
 def get_result_statistics_rows():
     cur = mycon.cursor()
     query = """SELECT s.id, s.name, COUNT(d.marks), SUM(d.marks), AVG(d.marks),
                       SUM(CASE WHEN d.marks < 35 THEN 1 ELSE 0 END)
                FROM student s
-               JOIN s_data d ON s.id = d.id
+               JOIN s_data d ON s.id = d.id AND d.marks IS NOT NULL
                GROUP BY s.id, s.name"""
     cur.execute(query)
     rows = cur.fetchall()

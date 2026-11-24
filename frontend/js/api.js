@@ -95,7 +95,7 @@ export async function login(username, password) {
 }
 
 export async function logout() {
-  let payload = { success: true };
+  let payload;
   try {
     payload = await requestJSON("/api/logout", {
       method: "POST",
@@ -105,8 +105,12 @@ export async function logout() {
       },
       body: "{}",
     });
-  } catch {
-    /* clearing the local session still matters */
+  } catch (error) {
+    clearSession();
+    return {
+      success: false,
+      message: `Local session cleared, but server logout could not be confirmed: ${error.message}`,
+    };
   }
   clearSession();
   return payload;

@@ -1,14 +1,18 @@
-from repositories import student_repository as repo
 import hashlib
-import secrets
 import hmac
+import secrets
+
+from repositories import student_repository as repo
+
+PASSWORD_ITERATIONS = 200000
+SALT_BYTES = 16
 
 
 def add_student_se(id, name, age):
     if not isinstance(id, int) or isinstance(id, bool) or id <= 0:
         return {"success": False, "message": "invalid student id"}
 
-    if not isinstance(name, str) or not name.strip():
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 20:
         return {"success": False, "message": "invalid student name"}
 
     if not isinstance(age, int) or isinstance(age, bool) or age <= 0:
@@ -46,7 +50,7 @@ def update_student_se(id, name, age):
     if not isinstance(id, int) or isinstance(id, bool) or id <= 0:
         return {"success": False, "message": "id is invalid"}
 
-    if not isinstance(name, str) or not name.strip():
+    if not isinstance(name, str) or not name.strip() or len(name.strip()) > 20:
         return {"success": False, "message": "name cannot be empty"}
 
     if not isinstance(age, int) or isinstance(age, bool) or age <= 0:
@@ -89,8 +93,10 @@ def set_student_credentials_se(id, user_name, password):
         if repo.username_exists(user_name, id):
             return {"success": False, "message": "username already exists"}
 
-        salt = secrets.token_bytes(16)
-        password_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200000)
+        salt = secrets.token_bytes(SALT_BYTES)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, PASSWORD_ITERATIONS
+        )
         stored_hash = salt.hex() + "$" + password_hash.hex()
 
         updated = repo.set_student_credentials(id, user_name, stored_hash)
@@ -116,7 +122,9 @@ def login_student_se(user_name, password):
 
         salt_hex, stored_hash = student[2].split("$")
         salt = bytes.fromhex(salt_hex)
-        password_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200000)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, PASSWORD_ITERATIONS
+        )
 
         if not hmac.compare_digest(password_hash.hex(), stored_hash):
             return {"success": False, "message": "invalid username or password"}

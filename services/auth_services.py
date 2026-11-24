@@ -4,12 +4,12 @@ import secrets
 import time
 
 from repositories import auth_repository as repo
-
-# ===== UPDATED: Existing Code - Student lookup for login credential creation =====
 from repositories import student_repository
 
 sessions = {}
 SESSION_TIMEOUT = 1800
+PASSWORD_ITERATIONS = 200000
+SALT_BYTES = 16
 
 
 def login_user(username, password):
@@ -26,7 +26,9 @@ def login_user(username, password):
 
         salt_hex, stored_hash = user["password_hash"].split("$")
         salt = bytes.fromhex(salt_hex)
-        password_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200000)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, PASSWORD_ITERATIONS
+        )
 
         if not hmac.compare_digest(password_hash.hex(), stored_hash):
             return {"success": False, "message": "invalid username or password"}
@@ -103,13 +105,17 @@ def change_password(username, old_password, new_password):
 
         salt_hex, stored_hash = user["password_hash"].split("$")
         salt = bytes.fromhex(salt_hex)
-        old_hash = hashlib.pbkdf2_hmac("sha256", old_password.encode(), salt, 200000)
+        old_hash = hashlib.pbkdf2_hmac(
+            "sha256", old_password.encode(), salt, PASSWORD_ITERATIONS
+        )
 
         if not hmac.compare_digest(old_hash.hex(), stored_hash):
             return {"success": False, "message": "invalid username or password"}
 
-        new_salt = secrets.token_bytes(16)
-        new_hash = hashlib.pbkdf2_hmac("sha256", new_password.encode(), new_salt, 200000)
+        new_salt = secrets.token_bytes(SALT_BYTES)
+        new_hash = hashlib.pbkdf2_hmac(
+            "sha256", new_password.encode(), new_salt, PASSWORD_ITERATIONS
+        )
         stored_new_hash = new_salt.hex() + "$" + new_hash.hex()
 
         updated = repo.update_user_password(user["user_id"], stored_new_hash)
@@ -136,8 +142,10 @@ def set_initial_password(username, new_password):
         if user["role"] not in ("student", "teacher", "admin"):
             return {"success": False, "message": "not allowed for this account"}
 
-        salt = secrets.token_bytes(16)
-        password_hash = hashlib.pbkdf2_hmac("sha256", new_password.encode(), salt, 200000)
+        salt = secrets.token_bytes(SALT_BYTES)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256", new_password.encode(), salt, PASSWORD_ITERATIONS
+        )
         stored_hash = salt.hex() + "$" + password_hash.hex()
 
         updated = repo.update_user_password(user["user_id"], stored_hash)
@@ -149,7 +157,6 @@ def set_initial_password(username, new_password):
         return {"success": False, "message": "password setup failed"}
 
 
-# ===== ADDED: Student Credential Management via users table - START =====
 def set_student_login_se(student_id, user_name, password):
     if not isinstance(student_id, int) or isinstance(student_id, bool) or student_id <= 0:
         return {"success": False, "message": "invalid student id"}
@@ -178,8 +185,10 @@ def set_student_login_se(student_id, user_name, password):
         ):
             return {"success": False, "message": "username already exists"}
 
-        salt = secrets.token_bytes(16)
-        password_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200000)
+        salt = secrets.token_bytes(SALT_BYTES)
+        password_hash = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, PASSWORD_ITERATIONS
+        )
         stored_hash = salt.hex() + "$" + password_hash.hex()
 
         if existing_student is not None:
@@ -194,7 +203,6 @@ def set_student_login_se(student_id, user_name, password):
         return {"success": True, "message": "student credentials created successfully"}
     except Exception:
         return {"success": False, "message": "could not save student credentials"}
-# ===== ADDED: Student Credential Management via users table - END =====
 
 
 def check_permission(session_token, allowed_roles):

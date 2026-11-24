@@ -1,30 +1,11 @@
 #!/usr/bin/env python3
-"""
-NSMS Frontend Gateway (standalone)
-==================================
+"""Translate browser HTTP requests into the NSMS socket protocol.
 
-This file belongs to the NEW `frontend/` folder only. It does NOT modify or
-import any of your existing project files. It exists because a browser cannot
-open a raw TCP socket to `server.py`, so this tiny HTTP server translates the
-browser's JSON requests into the exact JSON protocol your socket server expects.
+    Browser -> gateway.py (HTTP) -> server.py (TCP)
 
-    Browser  ->  gateway.py (HTTP, port 8080)  ->  server.py (TCP, port 5000)
-
-Run order:
-    1) python server.py            (your existing server, port 5000)
-    2) python frontend/gateway.py  (this file, port 8080)
-    3) open http://127.0.0.1:8080
-
-NO CHANGES are required in server.py, services/, repositories/, database/, etc.
-If you ever want the browser to talk to the socket server WITHOUT this gateway,
-you would have to add WebSocket/HTTP support to server.py - see README.md for
-the exact notes (kept as documentation only, nothing was edited).
-
-Optional environment overrides:
-    NSMS_SERVER_HOST=127.0.0.1
-    NSMS_SERVER_PORT=5000
-    NSMS_GATEWAY_HOST=127.0.0.1
-    NSMS_GATEWAY_PORT=8080
+Start server.py first, then run this file and open the printed UI address.
+The host and port values can be overridden with NSMS_SERVER_HOST,
+NSMS_SERVER_PORT, NSMS_GATEWAY_HOST, and NSMS_GATEWAY_PORT.
 """
 
 import json
@@ -40,7 +21,7 @@ GATEWAY_PORT = int(os.environ.get("NSMS_GATEWAY_PORT", "8080"))
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# Only requests that server.py actually implements are allowed through.
+# Keep this allowlist aligned with the requests routed in server.py.
 ALLOWED_COMMANDS = {
     "Add_Student",
     "Search_Student",
@@ -50,6 +31,29 @@ ALLOWED_COMMANDS = {
     "Add_Marks",
     "calculate_result",
     "display_topper",
+    "Display All Result",
+    "Update_Marks",
+    "Delete_Marks",
+    "result_statistics",
+    "course_toppers",
+    "Add_Teacher",
+    "Search_Teacher",
+    "Display All Teachers",
+    "Update_Teacher",
+    "Delete_Teacher",
+    "Add_Course",
+    "Search_Course",
+    "Display All Courses",
+    "Update_Course",
+    "Delete_Course",
+    "Allocate_Student",
+    "Display All Allocations",
+    "Remove_Allocation",
+    "View_My_Allocated_Students",
+    "Enroll_Student",
+    "Display All Enrollments",
+    "Remove_Enrollment",
+    "Set_Student_Credentials",
 }
 
 CONTENT_TYPES = {
@@ -71,21 +75,21 @@ CONTENT_TYPES = {
 
 
 def tcp_request(request, data=None, session_token=None):
-    """Send one JSON request to server.py and return the decoded response."""
+    """Send one JSON request to server.py and return the decoded response.
+
+    The server accepts a complete JSON object followed by socket shutdown,
+    which is how this gateway frames each request.
+    """
     payload = {"request": request, "data": data or {}}
     if session_token:
         payload["session_token"] = session_token
 
     with socket.create_connection((SERVER_HOST, SERVER_PORT), timeout=10) as sock:
-        sock.settimeout(10)
         sock.sendall(json.dumps(payload).encode("utf-8"))
 
         chunks = []
         while True:
-            try:
-                chunk = sock.recv(4096)
-            except socket.timeout:
-                break
+            chunk = sock.recv(4096)
             if not chunk:
                 break
             chunks.append(chunk)
@@ -131,7 +135,7 @@ def _topper_object(row):
 
 
 def sanitize_response(request, response):
-    """Keep sensitive columns out of the browser and normalize tuple rows."""
+    """Replace response data in place with browser-safe objects."""
     if not isinstance(response, dict):
         return response
 
@@ -146,6 +150,7 @@ def sanitize_response(request, response):
 
 
 def health_payload():
+    """Report gateway success even when the TCP server is unreachable."""
     reachable = False
     error = None
     try:
@@ -192,13 +197,18 @@ class GatewayHandler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length") or 0)
         except ValueError:
-            length = 0
+            raise ValueError("Invalid Content-Length")
         if length <= 0:
             return {}
+        if length > 1024 * 1024:
+            raise ValueError("Request body is too large")
         raw = self.rfile.read(length)
         if not raw:
             return {}
-        return json.loads(raw.decode("utf-8"))
+        body = json.loads(raw.decode("utf-8"))
+        if not isinstance(body, dict):
+            raise ValueError("JSON request body must be an object")
+        return body
 
     def do_OPTIONS(self):
         self.send_response(204)
@@ -217,7 +227,7 @@ class GatewayHandler(BaseHTTPRequestHandler):
 
         try:
             body = self._read_json_body()
-        except (ValueError, json.JSONDecodeError):
+        except ValueError:
             self._send_json({"success": False, "message": "Invalid JSON body"}, status=400)
             return
 
@@ -236,13 +246,20 @@ class GatewayHandler(BaseHTTPRequestHandler):
                 response = tcp_request("Logout", session_token=token)
             elif path == "/api/command":
                 command = body.get("request")
-                if command not in ALLOWED_COMMANDS:
+                data = body.get("data", {})
+                if not isinstance(command, str) or command not in ALLOWED_COMMANDS:
                     self._send_json(
                         {"success": False, "message": "Unsupported request"}, status=400
                     )
                     return
+                if not isinstance(data, dict):
+                    self._send_json(
+                        {"success": False, "message": "Request data must be an object"},
+                        status=400,
+                    )
+                    return
                 response = tcp_request(
-                    command, body.get("data") or {}, session_token=token
+                    command, data, session_token=token
                 )
                 response = sanitize_response(command, response)
             else:

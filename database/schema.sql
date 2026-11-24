@@ -35,15 +35,13 @@ CREATE TABLE IF NOT EXISTS s_data (
 
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    -- ===== UPDATED: Existing Code - Match the live users.username column length =====
     username VARCHAR(20) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'teacher', 'student') NOT NULL,
     reference_id INT
 );
 
--- ===== ADDED: Teacher Allocated Students Feature - START =====
--- Additive allocation table. Existing tables and records are not modified.
+-- Links a teacher, student, and course for allocation reporting.
 CREATE TABLE IF NOT EXISTS teacher_student_allocation (
     teacher_id INT NOT NULL,
     student_id INT NOT NULL,
@@ -53,7 +51,6 @@ CREATE TABLE IF NOT EXISTS teacher_student_allocation (
     CONSTRAINT fk_alloc_student FOREIGN KEY (student_id) REFERENCES student(id),
     CONSTRAINT fk_alloc_course FOREIGN KEY (course_id) REFERENCES course(course_id)
 );
--- ===== ADDED: Teacher Allocated Students Feature - END =====
 
 CREATE TABLE IF NOT EXISTS student_course_enrollment (
     student_id INT NOT NULL,

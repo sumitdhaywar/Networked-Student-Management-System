@@ -12,7 +12,7 @@ def add_student(id, name, age):
 
 def get_student(id):
     cur = mycon.cursor()
-    query = "SELECT * FROM student WHERE id = %s"
+    query = "SELECT id, name, age, user_name FROM student WHERE id = %s"
     cur.execute(query, (id,))
     student = cur.fetchone()
     cur.close()
@@ -21,7 +21,7 @@ def get_student(id):
 
 def get_all_students():
     cur = mycon.cursor()
-    query = "SELECT * FROM student"
+    query = "SELECT id, name, age, user_name FROM student"
     cur.execute(query)
     students = cur.fetchall()
     cur.close()

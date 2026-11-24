@@ -1,12 +1,20 @@
+import math
+
 from repositories import courses_repository as repo
 
 
 def add_course_se(co_id, co_name, fees):
     if not isinstance(co_id, int) or isinstance(co_id, bool) or co_id <= 0:
         return {"success": False, "message": "invalid course id"}
-    if not isinstance(co_name, str) or not co_name.strip():
+    if not isinstance(co_name, str) or not co_name.strip() or len(co_name.strip()) > 20:
         return {"success": False, "message": "course name is not valid"}
-    if isinstance(fees, bool) or not isinstance(fees, (int, float)) or fees < 0:
+    if (
+        isinstance(fees, bool)
+        or not isinstance(fees, (int, float))
+        or fees < 0
+        or fees > 99999999.99
+        or not math.isfinite(fees)
+    ):
         return {"success": False, "message": "invalid course fees"}
     try:
         repo.add_course(co_id, co_name.strip(), fees)
@@ -38,9 +46,15 @@ def get_all_course_se():
 def update_course_se(co_id, co_name, fees):
     if not isinstance(co_id, int) or isinstance(co_id, bool) or co_id <= 0:
         return {"success": False, "message": "invalid course id"}
-    if not isinstance(co_name, str) or not co_name.strip():
+    if not isinstance(co_name, str) or not co_name.strip() or len(co_name.strip()) > 20:
         return {"success": False, "message": "course name is not valid"}
-    if isinstance(fees, bool) or not isinstance(fees, (int, float)) or fees < 0:
+    if (
+        isinstance(fees, bool)
+        or not isinstance(fees, (int, float))
+        or fees < 0
+        or fees > 99999999.99
+        or not math.isfinite(fees)
+    ):
         return {"success": False, "message": "invalid course fees"}
     try:
         updated = repo.update_course(co_id, co_name.strip(), fees)

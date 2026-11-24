@@ -1,28 +1,66 @@
-from services import student_services as student_service
-from services import auth_services as auth_service
-from services import result_services as result_service
-
-# ===== UPDATED: Existing Code - Imports for Teacher, Course and Allocated Student features =====
-from services import teacher_services as teacher_service
-from services import course_services as course_service
-from services import allocation_services as allocation_service
-from services import enrollment_services as enrollment_service
-from database.connection import mycon
-
+import json
 import socket
 import threading
-import json
-
-# ===== UPDATED: Existing Code - Import date parsing for Teacher Management =====
 from datetime import date
+
+from database.connection import mycon
+from services import allocation_services as allocation_service
+from services import auth_services as auth_service
+from services import course_services as course_service
+from services import enrollment_services as enrollment_service
+from services import result_services as result_service
+from services import student_services as student_service
+from services import teacher_services as teacher_service
 
 HOST = "127.0.0.1"
 PORT = 5000
 request_lock = threading.Lock()
+MAX_REQUEST_BYTES = 1024 * 1024
 
 
 def send_response(client_socket, response):
     client_socket.sendall(json.dumps(response, default=str).encode())
+
+
+def parse_integer(payload, field):
+    value = payload.get(field)
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise ValueError(f"{field} must be an integer")
+    return int(value)
+
+
+def parse_number(payload, field):
+    value = payload.get(field)
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        raise ValueError(f"{field} must be numeric")
+    return float(value)
+
+
+def receive_request(client_socket):
+    """Read one complete JSON object, tolerating split TCP packets."""
+    data = bytearray()
+    while True:
+        chunk = client_socket.recv(min(4096, MAX_REQUEST_BYTES + 1 - len(data)))
+        if not chunk:
+            break
+        data.extend(chunk)
+        if len(data) > MAX_REQUEST_BYTES:
+            raise ValueError("Request is too large")
+
+        if b"\n" in data:
+            request_line, _, trailing = data.partition(b"\n")
+            if trailing.strip():
+                raise ValueError("Multiple requests are not supported")
+            return json.loads(request_line.decode("utf-8"))
+
+        try:
+            return json.loads(data.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+
+    if not data:
+        return None
+    return json.loads(data.decode("utf-8"))
 
 
 def get_session_identity(session_token):
@@ -46,6 +84,11 @@ def check_access(session_token, allowed_roles):
         return None, {"success": False, "message": "Invalid or expired session"}
 
     return identity, None
+
+
+def teacher_owns_result(result, teacher_id):
+    """Check the teacher id stored in the fourth column of an s_data row."""
+    return result.get("success") and str(result["data"][3]) == str(teacher_id)
 
 
 def start_server():
@@ -77,17 +120,30 @@ def _handle_client_request(client_socket, client_address):
         client_socket.settimeout(10)
         print("Client connected:", client_address)
 
-        data = client_socket.recv(1024)
-        if not data:
+        request_data = receive_request(client_socket)
+        if request_data is None:
             return
 
-        request_data = json.loads(data.decode())
+        if not isinstance(request_data, dict):
+            send_response(
+                client_socket,
+                {"success": False, "message": "Request must be a JSON object"},
+            )
+            return
+
         request = request_data.get("request")
         payload = request_data.get("data", {})
+        if not isinstance(request, str) or not isinstance(payload, dict):
+            send_response(
+                client_socket,
+                {"success": False, "message": "Invalid request data"},
+            )
+            return
         session_token = request_data.get("session_token")
 
         print("Request:", request)
 
+        # Login and Logout manage the session itself, so they run before access checks.
         if request == "Login":
             username = payload.get("username")
             password = payload.get("password")
@@ -97,7 +153,12 @@ def _handle_client_request(client_socket, client_address):
             response = auth_service.logout_user(session_token)
 
         else:
-            if request in ("Add_Student", "Display All Student", "update_student", "Delete_Student"):
+            if request in (
+                "Add_Student",
+                "Display All Student",
+                "update_student",
+                "Delete_Student",
+            ):
                 allowed_roles = ["admin"]
             elif request == "Add_Marks":
                 allowed_roles = ["teacher", "admin"]
@@ -107,9 +168,7 @@ def _handle_client_request(client_socket, client_address):
                 "Delete_Marks",
                 "result_statistics",
             ):
-                # Advanced marks & analytics routes (added for the web frontend)
                 allowed_roles = ["admin", "teacher"]
-            # ===== ADDED: Teacher Management Feature - START =====
             elif request in (
                 "Add_Teacher",
                 "Search_Teacher",
@@ -118,8 +177,6 @@ def _handle_client_request(client_socket, client_address):
                 "Delete_Teacher",
             ):
                 allowed_roles = ["admin"]
-            # ===== ADDED: Teacher Management Feature - END =====
-            # ===== ADDED: Course Management Feature - START =====
             elif request in (
                 "Add_Course",
                 "Search_Course",
@@ -128,19 +185,14 @@ def _handle_client_request(client_socket, client_address):
                 "Delete_Course",
             ):
                 allowed_roles = ["admin"]
-            # ===== ADDED: Course Management Feature - END =====
-            # ===== ADDED: Teacher Allocated Students Feature - START =====
             elif request in ("Allocate_Student", "Display All Allocations", "Remove_Allocation"):
                 allowed_roles = ["admin"]
             elif request in ("Enroll_Student", "Display All Enrollments", "Remove_Enrollment"):
                 allowed_roles = ["admin"]
             elif request == "View_My_Allocated_Students":
                 allowed_roles = ["teacher"]
-            # ===== ADDED: Teacher Allocated Students Feature - END =====
-            # ===== ADDED: Student Login Management Feature - START =====
             elif request == "Set_Student_Credentials":
                 allowed_roles = ["admin"]
-            # ===== ADDED: Student Login Management Feature - END =====
             elif request in (
                 "Search_Student",
                 "calculate_result",
@@ -161,13 +213,13 @@ def _handle_client_request(client_socket, client_address):
             reference_id = identity.get("reference_id")
 
             if request == "Add_Student":
-                student_id = int(payload.get("id"))
+                student_id = parse_integer(payload, "id")
                 name = payload.get("name")
-                age = int(payload.get("age"))
+                age = parse_integer(payload, "age")
                 response = student_service.add_student_se(student_id, name, age)
 
             elif request == "Search_Student":
-                student_id = int(payload.get("id"))
+                student_id = parse_integer(payload, "id")
                 if role == "student" and student_id != int(reference_id):
                     response = {"success": False, "message": "You can only view your own details"}
                 else:
@@ -177,28 +229,30 @@ def _handle_client_request(client_socket, client_address):
                 response = student_service.get_all_student_se()
 
             elif request == "update_student":
-                student_id = int(payload.get("id"))
+                student_id = parse_integer(payload, "id")
                 name = payload.get("name")
-                age = int(payload.get("age"))
+                age = parse_integer(payload, "age")
                 response = student_service.update_student_se(student_id, name, age)
 
             elif request == "Delete_Student":
-                student_id = int(payload.get("id"))
+                student_id = parse_integer(payload, "id")
                 response = student_service.delete_student_se(student_id)
 
             elif request == "Add_Marks":
-                student_id = int(payload.get("id"))
-                co_id = int(payload.get("co_id"))
-                t_id = int(payload.get("t_id"))
-                marks = float(payload.get("marks"))
+                student_id = parse_integer(payload, "id")
+                course_id = parse_integer(payload, "co_id")
+                teacher_id = parse_integer(payload, "t_id")
+                marks = parse_number(payload, "marks")
 
-                if role == "teacher" and str(reference_id) != str(t_id):
+                if role == "teacher" and str(reference_id) != str(teacher_id):
                     response = {"success": False, "message": "access denied: invalid teacher ID"}
                 else:
-                    response = result_service.add_result_se(student_id, co_id, t_id, marks)
+                    response = result_service.add_result_se(
+                        student_id, course_id, teacher_id, marks
+                    )
 
             elif request == "calculate_result":
-                student_id = int(payload.get("id"))
+                student_id = parse_integer(payload, "id")
                 if role == "student" and student_id != int(reference_id):
                     response = {"success": False, "message": "You can only view your own result"}
                 else:
@@ -210,7 +264,6 @@ def _handle_client_request(client_socket, client_address):
             elif request == "course_toppers":
                 response = result_service.get_course_toppers_se()
 
-            # --- Advanced marks & result analytics (added for the web frontend) ---
             elif request == "Display All Result":
                 response = result_service.get_all_result_se()
 
@@ -218,101 +271,100 @@ def _handle_client_request(client_socket, client_address):
                 response = result_service.get_result_statistics_se()
 
             elif request == "Update_Marks":
-                roll = int(payload.get("roll"))
-                student_id = int(payload.get("id"))
-                co_id = int(payload.get("co_id"))
-                t_id = int(payload.get("t_id"))
-                marks = float(payload.get("marks"))
+                roll = parse_integer(payload, "roll")
+                student_id = parse_integer(payload, "id")
+                course_id = parse_integer(payload, "co_id")
+                teacher_id = parse_integer(payload, "t_id")
+                marks = parse_number(payload, "marks")
 
-                if role == "teacher" and str(reference_id) != str(t_id):
+                if role == "teacher" and str(reference_id) != str(teacher_id):
                     response = {"success": False, "message": "access denied: invalid teacher ID"}
                 elif role == "teacher":
                     existing = result_service.get_result_se(roll)
                     if not existing.get("success"):
                         response = {"success": False, "message": "result not found"}
-                    elif str(existing["data"][3]) != str(reference_id):
+                    elif not teacher_owns_result(existing, reference_id):
                         response = {"success": False, "message": "access denied: not your record"}
                     else:
                         response = result_service.update_result_se(
-                            roll, student_id, co_id, t_id, marks
+                            roll, student_id, course_id, teacher_id, marks
                         )
                 else:
                     response = result_service.update_result_se(
-                        roll, student_id, co_id, t_id, marks
+                        roll, student_id, course_id, teacher_id, marks
                     )
 
             elif request == "Delete_Marks":
-                roll = int(payload.get("roll"))
+                roll = parse_integer(payload, "roll")
 
                 if role == "teacher":
                     existing = result_service.get_result_se(roll)
                     if not existing.get("success"):
                         response = {"success": False, "message": "result not found"}
-                    elif str(existing["data"][3]) != str(reference_id):
+                    elif not teacher_owns_result(existing, reference_id):
                         response = {"success": False, "message": "access denied: not your record"}
                     else:
                         response = result_service.delete_result_se(roll)
                 else:
                     response = result_service.delete_result_se(roll)
 
-            # ===== ADDED: Teacher Management Feature - START =====
             elif request == "Add_Teacher":
-                t_id = int(payload.get("t_id"))
-                t_name = payload.get("t_name")
-                j_o_d = date.fromisoformat(str(payload.get("j_o_d")))
-                salary = float(payload.get("salary"))
-                response = teacher_service.add_teacher_se(t_id, t_name, j_o_d, salary)
+                teacher_id = parse_integer(payload, "t_id")
+                teacher_name = payload.get("t_name")
+                joining_date = date.fromisoformat(str(payload.get("j_o_d")))
+                salary = parse_number(payload, "salary")
+                response = teacher_service.add_teacher_se(
+                    teacher_id, teacher_name, joining_date, salary
+                )
 
             elif request == "Search_Teacher":
-                t_id = int(payload.get("t_id"))
-                response = teacher_service.get_teacher_se(t_id)
+                teacher_id = parse_integer(payload, "t_id")
+                response = teacher_service.get_teacher_se(teacher_id)
 
             elif request == "Display All Teachers":
                 response = teacher_service.get_all_teacher_se()
 
             elif request == "Update_Teacher":
-                t_id = int(payload.get("t_id"))
-                t_name = payload.get("t_name")
-                j_o_d = date.fromisoformat(str(payload.get("j_o_d")))
-                salary = float(payload.get("salary"))
-                response = teacher_service.update_teacher_se(t_id, t_name, j_o_d, salary)
+                teacher_id = parse_integer(payload, "t_id")
+                teacher_name = payload.get("t_name")
+                joining_date = date.fromisoformat(str(payload.get("j_o_d")))
+                salary = parse_number(payload, "salary")
+                response = teacher_service.update_teacher_se(
+                    teacher_id, teacher_name, joining_date, salary
+                )
 
             elif request == "Delete_Teacher":
-                t_id = int(payload.get("t_id"))
-                response = teacher_service.delete_teacher_se(t_id)
-            # ===== ADDED: Teacher Management Feature - END =====
+                teacher_id = parse_integer(payload, "t_id")
+                response = teacher_service.delete_teacher_se(teacher_id)
 
-            # ===== ADDED: Course Management Feature - START =====
             elif request == "Add_Course":
-                co_id = int(payload.get("co_id"))
-                co_name = payload.get("co_name")
-                fees = float(payload.get("fees"))
-                response = course_service.add_course_se(co_id, co_name, fees)
+                course_id = parse_integer(payload, "co_id")
+                course_name = payload.get("co_name")
+                fees = parse_number(payload, "fees")
+                response = course_service.add_course_se(course_id, course_name, fees)
 
             elif request == "Search_Course":
-                co_id = int(payload.get("co_id"))
-                response = course_service.get_course_se(co_id)
+                course_id = parse_integer(payload, "co_id")
+                response = course_service.get_course_se(course_id)
 
             elif request == "Display All Courses":
                 response = course_service.get_all_course_se()
 
             elif request == "Update_Course":
-                co_id = int(payload.get("co_id"))
-                co_name = payload.get("co_name")
-                fees = float(payload.get("fees"))
-                response = course_service.update_course_se(co_id, co_name, fees)
+                course_id = parse_integer(payload, "co_id")
+                course_name = payload.get("co_name")
+                fees = parse_number(payload, "fees")
+                response = course_service.update_course_se(course_id, course_name, fees)
 
             elif request == "Delete_Course":
-                co_id = int(payload.get("co_id"))
-                response = course_service.delete_course_se(co_id)
-            # ===== ADDED: Course Management Feature - END =====
+                course_id = parse_integer(payload, "co_id")
+                response = course_service.delete_course_se(course_id)
 
-            # ===== ADDED: Teacher Allocated Students Feature - START =====
             elif request == "Allocate_Student":
                 response = allocation_service.add_allocation_se(
-                    int(payload.get("teacher_id")),
-                    int(payload.get("student_id")),
-                    int(payload.get("course_id")),
+                    parse_integer(payload, "teacher_id"),
+                    parse_integer(payload, "student_id"),
+                    parse_integer(payload, "course_id"),
                 )
 
             elif request == "Display All Allocations":
@@ -320,9 +372,9 @@ def _handle_client_request(client_socket, client_address):
 
             elif request == "Remove_Allocation":
                 response = allocation_service.delete_allocation_se(
-                    int(payload.get("teacher_id")),
-                    int(payload.get("student_id")),
-                    int(payload.get("course_id")),
+                    parse_integer(payload, "teacher_id"),
+                    parse_integer(payload, "student_id"),
+                    parse_integer(payload, "course_id"),
                 )
 
             elif request == "View_My_Allocated_Students":
@@ -336,12 +388,11 @@ def _handle_client_request(client_socket, client_address):
                     response = allocation_service.get_allocated_students_se(
                         int(reference_id)
                     )
-            # ===== ADDED: Teacher Allocated Students Feature - END =====
 
             elif request == "Enroll_Student":
                 response = enrollment_service.add_enrollment_se(
-                    int(payload.get("student_id")),
-                    int(payload.get("course_id")),
+                    parse_integer(payload, "student_id"),
+                    parse_integer(payload, "course_id"),
                 )
 
             elif request == "Display All Enrollments":
@@ -349,19 +400,16 @@ def _handle_client_request(client_socket, client_address):
 
             elif request == "Remove_Enrollment":
                 response = enrollment_service.delete_enrollment_se(
-                    int(payload.get("student_id")),
-                    int(payload.get("course_id")),
+                    parse_integer(payload, "student_id"),
+                    parse_integer(payload, "course_id"),
                 )
 
-            # ===== ADDED: Student Login Management Feature - START =====
             elif request == "Set_Student_Credentials":
-                # ===== UPDATED: Existing Code - Store student credentials in the centralized users table =====
                 response = auth_service.set_student_login_se(
-                    int(payload.get("id")),
+                    parse_integer(payload, "id"),
                     payload.get("user_name"),
                     payload.get("password"),
                 )
-            # ===== ADDED: Student Login Management Feature - END =====
 
             else:
                 send_response(client_socket, {"success": False, "message": "Invalid request"})
@@ -369,6 +417,8 @@ def _handle_client_request(client_socket, client_address):
 
         send_response(client_socket, response)
 
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        send_response(client_socket, {"success": False, "message": "Invalid JSON request"})
     except (ValueError, TypeError):
         send_response(client_socket, {"success": False, "message": "Invalid input data"})
     except Exception as e:
